@@ -1,0 +1,72 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: archconf-cloudfront
+
+Resources:
+
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Origins:
+          - Id: S3Origin
+            DomainName: !Select [1, !Split ['://', !ImportValue BucketUrl]]
+            CustomOriginConfig:
+              OriginProtocolPolicy: http-only
+          - Id: S3SecureOrigin
+            DomainName: !ImportValue BucketDomain
+            S3OriginConfig:
+              OriginAccessIdentity: !Join ["", ["origin-access-identity/cloudfront/", !Ref OriginAccessIdentity]]
+        Enabled: 'true'
+        DefaultRootObject: index.html
+        Aliases:
+          - !ImportValue DomainName
+          - !Join ['.', ['www', !ImportValue DomainName]]
+        DefaultCacheBehavior:
+          AllowedMethods:
+          - GET
+          - HEAD
+          TargetOriginId: S3Origin
+          ForwardedValues:
+            QueryString: 'false'
+            Cookies:
+              Forward: none
+          ViewerProtocolPolicy: allow-all
+          Compress: true
+        CacheBehaviors:
+          - AllowedMethods:
+            - GET
+            - HEAD
+            PathPattern: "/secure/*"
+            ViewerProtocolPolicy: https-only
+            TargetOriginId: S3SecureOrigin
+            ForwardedValues:
+              QueryString: 'false'
+              Cookies:
+                Forward: none
+            LambdaFunctionAssociations:
+              - EventType: viewer-request
+                LambdaFunctionARN: !ImportValue VersionedLambdaArn
+        PriceClass: PriceClass_100
+        ViewerCertificate:
+          AcmCertificateArn: !ImportValue CertificateArn
+          SslSupportMethod: sni-only
+
+  OriginAccessIdentity:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: 'archconf-s3-secure'
+
+Outputs:
+  CloudFrontDomain:
+    Value: !GetAtt CloudFrontDistribution.DomainName
+    Export:
+      Name: CloudFrontDomain
+  OriginAccessId:
+    Value: !Ref OriginAccessIdentity
+    Export:
+      Name: OriginAccessIdentity
+  S3CanonicalUserId:
+    Value: !GetAtt OriginAccessIdentity.S3CanonicalUserId
+    Export:
+      Name: S3CanonicalUserId

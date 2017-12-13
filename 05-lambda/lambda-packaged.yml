@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: archconf-lambda
+Outputs:
+  LambdaArn:
+    Export:
+      Name: LambdaArn
+    Value:
+      Fn::GetAtt:
+      - BasicAuthFunction
+      - Arn
+  VersionedLambdaArn:
+    Export:
+      Name: VersionedLambdaArn
+    Value:
+      Ref: FunctionVersion
+Resources:
+  BasicAuthFunction:
+    Properties:
+      CodeUri: s3://archconf-lambda-code/de551aa1f4c8e90c02ab1fa78b6229ec
+      Handler: basic_auth.handler
+      Role:
+        Fn::GetAtt:
+        - FunctionRole
+        - Arn
+      Runtime: nodejs6.10
+    Type: AWS::Serverless::Function
+  FunctionRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+            - edgelambda.amazonaws.com
+        Version: '2012-10-17'
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+    Type: AWS::IAM::Role
+  FunctionVersion:
+    Properties:
+      FunctionName:
+        Ref: BasicAuthFunction
+    Type: AWS::Lambda::Version
+Transform: AWS::Serverless-2016-10-31

@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: archconf-lambda
+
+Resources:
+
+  BasicAuthFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: basic_auth.handler
+      Runtime: nodejs6.10
+      CodeUri: basic_auth.zip
+      Role: !GetAtt FunctionRole.Arn
+
+  FunctionVersion:
+    Type: "AWS::Lambda::Version"
+    Properties:
+      FunctionName: !Ref BasicAuthFunction
+
+  FunctionRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+                - "edgelambda.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+Outputs:
+  LambdaArn:
+    Value: !GetAtt BasicAuthFunction.Arn
+    Export:
+      Name: LambdaArn
+  VersionedLambdaArn:
+    Value: !Ref FunctionVersion
+    Export:
+      Name: VersionedLambdaArn
