@@ -1,10 +1,10 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: archconf-route53
+Description: oscon-route53
 
 Parameters:
   DomainName:
     Type: String
-    Default: archconf.symphonia.io
+    Default: oscon.symphonia.io
 
 Resources:
 

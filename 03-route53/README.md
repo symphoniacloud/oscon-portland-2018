@@ -11,8 +11,8 @@ $ aws cloudformation list-exports \
 ```
 aws cloudformation create-stack \
   --template-body file://route53.yml \
-  --stack-name archconf-route53 \
-  --parameters ParameterKey=DomainName,ParameterValue=archconf.symphonia.io \
+  --stack-name oscon-route53 \
+  --parameters ParameterKey=DomainName,ParameterValue=oscon.symphonia.io \
                ParameterKey=CloudFrontDomain,ParameterValue=d1m7ry5mc4n7kv.cloudfront.net
 ```
 
@@ -21,6 +21,6 @@ aws cloudformation create-stack \
 ```
 aws cloudformation update-stack \
   --template-body file://cloudfront.yml \
-  --stack-name archconf-cloudfront \
-  --parameters ParameterKey=DomainName,ParameterValue=archconf.symphonia.io
+  --stack-name oscon-cloudfront \
+  --parameters ParameterKey=DomainName,ParameterValue=oscon.symphonia.io
 ```

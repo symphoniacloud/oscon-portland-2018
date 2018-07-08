@@ -3,7 +3,7 @@
 ```
 aws cloudformation create-stack \
   --template-body file://cloudfront.yml \
-  --stack-name archconf-cloudfront
+  --stack-name oscon-cloudfront
 ```
 
 # Get the distribution domain name

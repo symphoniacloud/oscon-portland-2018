@@ -3,7 +3,7 @@
 ```
 aws cloudformation create-stack \
   --template-body file://s3.yml \
-  --stack-name archconf-s3
+  --stack-name oscon-s3
 ```
 
 # Get the bucket URL

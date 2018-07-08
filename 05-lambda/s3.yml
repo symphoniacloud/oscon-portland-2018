@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: archconf-s3
+Description: oscon-s3
 
 Resources:
 

@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: archconf-lambda
+Description: oscon-lambda
 Outputs:
   LambdaArn:
     Export:
@@ -16,7 +16,7 @@ Outputs:
 Resources:
   BasicAuthFunction:
     Properties:
-      CodeUri: s3://archconf-lambda-code/de551aa1f4c8e90c02ab1fa78b6229ec
+      CodeUri: s3://oscon-lambda-code/de551aa1f4c8e90c02ab1fa78b6229ec
       Handler: basic_auth.handler
       Role:
         Fn::GetAtt:

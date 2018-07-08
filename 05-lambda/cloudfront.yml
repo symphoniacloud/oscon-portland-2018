@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: archconf-cloudfront
+Description: oscon-cloudfront
 
 Resources:
 
@@ -55,7 +55,7 @@ Resources:
     Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
     Properties:
       CloudFrontOriginAccessIdentityConfig:
-        Comment: 'archconf-s3-secure'
+        Comment: 'oscon-s3-secure'
 
 Outputs:
   CloudFrontDomain:
