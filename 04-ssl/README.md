@@ -1,32 +1,18 @@
-# Create the Certificate stack (in us-east-1)
+# Update the CloudFormation stack
 
 ```
-$ aws cloudformation create-stack \
-  --region us-east-1 \
-  --template-body file://certificate.yml \
-  --stack-name oscon-certificate \
-  --parameters ParameterKey=DomainName,ParameterValue=oscon.symphonia.io \
+aws cloudformation update-stack \
+  --template-body file://cfn.yml \
+  --stack-name oscon-static \
+  --parameters ParameterKey=DomainName,ParameterValue=2018.oscon.symphonia.io \
+               ParameterKey=HostedZoneName,ParameterValue=oscon.symphonia.io. \
                ParameterKey=ValidationDomain,ParameterValue=symphonia.io
 ```
 
 # Validate the certificate (via email, or DNS)
 
-# Get the CertificateArn (from us-east-1)
+# Open the site using the HTTPS protocol
 
 ```
-$ aws cloudformation list-exports \
-  --region us-east-1 \
-  --query 'Exports[?Name==`CertificateArn`].Value' \
-  --output text
-```
-
-
-# Update the CloudFront stack
-
-```
-$ aws cloudformation update-stack \
-  --template-body file://cloudfront.yml \
-  --stack-name oscon-cloudfront \
-  --parameters ParameterKey=DomainName,ParameterValue=oscon.symphonia.io \
-               ParameterKey=CertificateArn,ParameterValue=arn:aws:acm:us-east-1:960197636066:certificate/76127d2b-bf89-4495-b271-5c3737567cf6
+open "https://2018.oscon.symphonia.io"
 ```
