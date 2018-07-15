@@ -3,15 +3,16 @@
 ```
 aws cloudformation create-stack \
   --template-body file://cfn.yml \
-  --stack-name oscon-phase-1
+  --stack-name oscon-static
 ```
 
 # Get the bucket name
 
 ```
-export OSCON_BUCKET=$(aws cloudformation list-stack-resources \
-  --stack-name oscon-phase-1 \
-  --query 'StackResourceSummaries[?LogicalResourceId==`Bucket`].PhysicalResourceId' \
+export OSCON_BUCKET=$(aws cloudformation describe-stack-resource \
+  --stack-name oscon-static \
+  --logical-resource-id Bucket \
+  --query 'StackResourceDetail.PhysicalResourceId' \
   --output text)
 ```
 

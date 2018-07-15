@@ -2,7 +2,7 @@
 
 ```
 aws cloudformation update-stack \
-  --template-body cfn.yml \
+  --template-body file://cfn.yml \
   --stack-name oscon-static \
   --parameters ParameterKey=DomainName,ParameterValue=2018.oscon.symphonia.io \
                ParameterKey=HostedZoneName,ParameterValue=oscon.symphonia.io.
