@@ -1,27 +1,34 @@
-# Deploy the CloudFront stack
+# Update the CloudFormation stack
 
 ```
-aws cloudformation create-stack \
-  --template-body file://cloudfront.yml \
-  --stack-name oscon-cloudfront
+aws cloudformation update-stack \
+  --template-body file://cfn.yml \
+  --stack-name oscon-static
 ```
 
-# Get the distribution domain name
+# Get the CloudFront distribution id and domain name
 
 ```
-aws cloudformation list-exports \
-  --query 'Exports[?Name==`CloudFrontDomain`].Value' \
-  --output text
+export OSCON_CLOUDFRONT_ID=$(aws cloudformation describe-stack-resource \
+  --stack-name oscon-static \
+  --logical-resource-id CloudFrontDistribution \
+  --query 'StackResourceDetail.PhysicalResourceId' \
+  --output text)
+
+export OSCON_CLOUDFRONT_DOMAIN=$(aws cloudfront get-distribution \
+  --id ${OSCON_CLOUDFRONT_ID} \
+  --query 'Distribution.DomainName' \
+  --output text)
 ```
 
 # Visit the domain
 
 ```
-open "..."
+open "http://${OSCON_CLOUDFRONT_DOMAIN}"
 ```
 
 # Check out the latency
 
 ```
-curl -o /dev/null -s -w "%{time_total}\n" ...
+curl -o /dev/null -s -w "%{time_total}\n" "http://${OSCON_CLOUDFRONT_DOMAIN}"
 ```
