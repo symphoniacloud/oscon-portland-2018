@@ -2,32 +2,33 @@
 
 ```
 aws cloudformation create-stack \
-  --template-body file://s3.yml \
-  --stack-name oscon-s3
+  --template-body file://cfn.yml \
+  --stack-name oscon-phase-1
 ```
 
-# Get the bucket URL
+# Get the bucket name
 
 ```
-aws cloudformation list-exports \
-  --query 'Exports[?Name==`BucketUrl`].Value' \
-   --output text
+export OSCON_BUCKET=$(aws cloudformation list-stack-resources \
+  --stack-name oscon-phase-1 \
+  --query 'StackResourceSummaries[?LogicalResourceId==`Bucket`].PhysicalResourceId' \
+  --output text)
 ```
 
 # Visit the bucket URL, observe 404
 
 ```
-open "..."
+open "http://${OSCON_BUCKET}.s3-website-us-east-1.amazonaws.com"
 ```
 
 # Upload some content!
 
 ```
-aws s3 sync content s3://...
+aws s3 sync content s3://${OSCON_BUCKET}
 ```
 
 # Check out the latency
 
 ```
-curl -o /dev/null -s -w "%{time_total}\n" ...
+curl -o /dev/null -s -w "%{time_total}\n" "http://${OSCON_BUCKET}.s3-website-us-east-1.amazonaws.com"
 ```

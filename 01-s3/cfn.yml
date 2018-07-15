@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: oscon-s3
+Description: OSCON Static Content Tutorial (Lesson 1)
 
 Resources:
 
@@ -22,17 +22,3 @@ Resources:
             Effect: Allow
             Resource: !Sub "${Bucket.Arn}/*"
             Principal: "*"
-
-Outputs:
-  BucketArn:
-    Value: !GetAtt Bucket.Arn
-    Export:
-      Name: BucketArn
-  BucketUrl:
-    Value: !GetAtt Bucket.WebsiteURL
-    Export:
-      Name: BucketUrl
-  BucketDomain:
-    Value: !GetAtt Bucket.DomainName
-    Export:
-      Name: BucketDomain
