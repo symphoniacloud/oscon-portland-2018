@@ -1,21 +1,49 @@
-# Deploy Lambda stack (in us-east-1)
-
-Note that you'll need an S3 bucket to hold the deployed code.
+# Deploy the SAM bootstrap stack
 
 ```
-$ aws cloudformation package \
-  --region us-east-1 \
-  --s3-bucket oscon-static-lambda-code \
-  --template-file lambda.yml \
-  --output-template-file lambda-packaged.yml
+aws cloudformation create-stack \
+  --stack-name sam-bootstrap \
+  --template-body file://sam-bootstrap-cfn.yml
+```
 
-$ aws cloudformation deploy \
-  --region us-east-1 \
+# Get the S3 bucket name
+
+```
+export SAM_BUCKET=$(aws cloudformation describe-stack-resource \
+  --stack-name sam-bootstrap \
+  --logical-resource-id Bucket \
+  --query 'StackResourceDetail.PhysicalResourceId' \
+  --output text)
+```
+
+# Deploy CloudFormation stack using SAM package/deploy
+
+Note the missing `file://` syntax. The `package` and `deploy` commands are for the Serverless Application Model, and have some slight differences from the normal CloudFormation commands.
+
+```
+aws cloudformation package \
+  --s3-bucket ${SAM_BUCKET} \
+  --template-file cfn.yml \
+  --output-template-file cfn-packaged.yml
+```
+
+Note that by using `deploy`, we don't have to specify unchanged parameter values.
+
+```
+aws cloudformation deploy \
   --capabilities CAPABILITY_IAM \
-  --template-file lambda-packaged.yml \
-  --stack-name oscon-lambda
+  --template-file cfn-packaged.yml \
+  --stack-name oscon-static
 ```
 
+# Upload the new "secure" content
 
+```
+aws s3 sync content s3://${OSCON_BUCKET}
+```
 
-# Update the CloudFront stack
+# Visit the secure area of the site:
+
+```
+open "https://2018.oscon.symphonia.io/secure/secret.html"
+```

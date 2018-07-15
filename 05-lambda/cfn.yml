@@ -1,0 +1,151 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: OSCON Static Content Tutorial (Lesson 5)
+
+Parameters:
+
+  DomainName:
+    Type: String
+  HostedZoneName:
+    Type: String
+  ValidationDomain:
+    Type: String
+
+Resources:
+
+  Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: PublicRead
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: error.html
+
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref Bucket
+      PolicyDocument:
+        Statement:
+          - Action:
+            - s3:GetObject
+            Effect: Allow
+            Resource: !Sub "${Bucket.Arn}/*"
+            Principal: "*"
+          - Action:
+            - s3:GetObject
+            Effect: Deny
+            Resource: !Sub "${Bucket.Arn}/secure/*"
+            NotPrincipal:
+              AWS: !Join ["", ["arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ", !Ref OriginAccessIdentity]]
+
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Origins:
+          - Id: S3Origin
+            DomainName: !Select [1, !Split ['://', !GetAtt Bucket.WebsiteURL]]
+            CustomOriginConfig:
+              OriginProtocolPolicy: http-only
+          - Id: S3SecureOrigin
+            DomainName: !GetAtt Bucket.DomainName
+            S3OriginConfig:
+              OriginAccessIdentity: !Join ["", ["origin-access-identity/cloudfront/", !Ref OriginAccessIdentity]]
+        Enabled: 'true'
+        DefaultRootObject: index.html
+        Aliases:
+          - !Ref DomainName
+          - !Join ['.', ['www', !Ref DomainName]]
+        DefaultCacheBehavior:
+          AllowedMethods:
+          - GET
+          - HEAD
+          TargetOriginId: S3Origin
+          ForwardedValues:
+            QueryString: 'false'
+            Cookies:
+              Forward: none
+          ViewerProtocolPolicy: allow-all
+          Compress: true
+        CacheBehaviors:
+          - AllowedMethods:
+            - GET
+            - HEAD
+            PathPattern: "/secure/*"
+            ViewerProtocolPolicy: https-only
+            TargetOriginId: S3SecureOrigin
+            ForwardedValues:
+              QueryString: 'false'
+              Cookies:
+                Forward: none
+            LambdaFunctionAssociations:
+              - EventType: viewer-request
+                LambdaFunctionARN: !Ref BasicAuthFunctionVersion
+        PriceClass: PriceClass_100
+        ViewerCertificate:
+          AcmCertificateArn: !Ref Certificate
+          SslSupportMethod: sni-only
+
+  RecordSetGroup:
+    Type: AWS::Route53::RecordSetGroup
+    Properties:
+      HostedZoneName: !Ref HostedZoneName
+      RecordSets:
+      - Name: !Ref DomainName
+        Type: A
+        AliasTarget:
+          DNSName: !GetAtt CloudFrontDistribution.DomainName
+          HostedZoneId: Z2FDTNDATAQYW2 # Universal CloudFront Hosted Zone ID
+      - Name: !Join ['.', ['www', !Ref DomainName]]
+        Type: A
+        AliasTarget:
+          DNSName: !GetAtt CloudFrontDistribution.DomainName
+          HostedZoneId: Z2FDTNDATAQYW2
+
+  Certificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !Ref DomainName
+      SubjectAlternativeNames:
+        - !Join ['.', ['*', !Ref DomainName]]
+      DomainValidationOptions:
+        - DomainName: !Ref DomainName
+          ValidationDomain: !Ref ValidationDomain
+        - DomainName: !Join ['.', ['*', !Ref DomainName]]
+          ValidationDomain: !Ref ValidationDomain
+
+  OriginAccessIdentity:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: 'oscon-s3-secure'
+
+  BasicAuthFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: basic_auth.handler
+      Runtime: nodejs6.10
+      CodeUri: basic_auth.zip
+      Role: !GetAtt BasicAuthFunctionRole.Arn
+
+  BasicAuthFunctionVersion:
+    Type: "AWS::Lambda::Version"
+    Properties:
+      FunctionName: !Ref BasicAuthFunction
+
+  BasicAuthFunctionRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+                - "edgelambda.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
