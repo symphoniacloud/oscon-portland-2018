@@ -1,0 +1,74 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: OSCON Static Content Tutorial (Lesson 3)
+
+Parameters:
+
+  DomainName:
+    Type: String
+  HostedZoneName:
+    Type: String
+
+Resources:
+
+  Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: PublicRead
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: error.html
+
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref Bucket
+      PolicyDocument:
+        Statement:
+          - Action:
+            - s3:GetObject
+            Effect: Allow
+            Resource: !Sub "${Bucket.Arn}/*"
+            Principal: "*"
+
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Origins:
+        - Id: S3Origin
+          DomainName: !Select [1, !Split ['://', !GetAtt Bucket.WebsiteURL]]
+          CustomOriginConfig:
+            OriginProtocolPolicy: http-only
+        Enabled: 'true'
+        DefaultRootObject: index.html
+        Aliases:
+          - !Ref DomainName
+          - !Join ['.', ['www', !Ref DomainName]]
+        DefaultCacheBehavior:
+          AllowedMethods:
+          - GET
+          - HEAD
+          TargetOriginId: S3Origin
+          ForwardedValues:
+            QueryString: 'false'
+            Cookies:
+              Forward: none
+          ViewerProtocolPolicy: allow-all
+          Compress: true
+        PriceClass: PriceClass_100
+
+  RecordSetGroup:
+    Type: AWS::Route53::RecordSetGroup
+    Properties:
+      HostedZoneName: !Ref HostedZoneName
+      RecordSets:
+      - Name: !Ref DomainName
+        Type: A
+        AliasTarget:
+          DNSName: !GetAtt CloudFrontDistribution.DomainName
+          HostedZoneId: Z2FDTNDATAQYW2 # Universal CloudFront Hosted Zone ID
+      - Name: !Join ['.', ['www', !Ref DomainName]]
+        Type: A
+        AliasTarget:
+          DNSName: !GetAtt CloudFrontDistribution.DomainName
+          HostedZoneId: Z2FDTNDATAQYW2

@@ -1,26 +1,15 @@
-# Get the CloudFrontDomain value
-
-```
-$ aws cloudformation list-exports \
-  --query 'Exports[?Name==`CloudFrontDomain`].Value' \
-  --output text
-```
-
-# Deploy the Route53 stack
-
-```
-aws cloudformation create-stack \
-  --template-body file://route53.yml \
-  --stack-name oscon-route53 \
-  --parameters ParameterKey=DomainName,ParameterValue=oscon.symphonia.io \
-               ParameterKey=CloudFrontDomain,ParameterValue=d1m7ry5mc4n7kv.cloudfront.net
-```
-
-# Update the CloudFront stack
+# Update the CloudFormation stack
 
 ```
 aws cloudformation update-stack \
-  --template-body file://cloudfront.yml \
-  --stack-name oscon-cloudfront \
-  --parameters ParameterKey=DomainName,ParameterValue=oscon.symphonia.io
+  --template-body cfn.yml \
+  --stack-name oscon-static \
+  --parameters ParameterKey=DomainName,ParameterValue=2018.oscon.symphonia.io \
+               ParameterKey=HostedZoneName,ParameterValue=oscon.symphonia.io.
+```
+
+# Open the site using the domain name
+
+```
+open "http://2018.oscon.symphonia.io"
 ```
