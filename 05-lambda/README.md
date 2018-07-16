@@ -20,12 +20,27 @@ export SAM_BUCKET=$(aws cloudformation describe-stack-resource \
 
 Note the missing `file://` syntax. The `package` and `deploy` commands are for the Serverless Application Model, and have some slight differences from the normal CloudFormation commands.
 
+## Package
+
+### If you have setup Route 53 and SSL
+
 ```
 aws cloudformation package \
   --s3-bucket ${SAM_BUCKET} \
   --template-file cfn.yml \
   --output-template-file cfn-packaged.yml
 ```
+
+### If you have not setup Route 53 and SSL
+
+```
+aws cloudformation package \
+  --s3-bucket ${SAM_BUCKET} \
+  --template-file cfn-no-route53-or-ssl.yml \
+  --output-template-file cfn-packaged.yml
+```
+
+## Deploy
 
 Note that by using `deploy`, we don't have to specify unchanged parameter values.
 
@@ -44,6 +59,14 @@ aws s3 sync content s3://${OSCON_BUCKET}
 
 # Visit the secure area of the site:
 
+### If you have setup Route 53 and SSL
+
 ```
 open "https://2018.oscon.symphonia.io/secure/secret.html"
+```
+
+### If you have not setup Route 53 and SSL
+
+```
+open "http://${OSCON_CLOUDFRONT_DOMAIN}/secure/secret.html"
 ```
