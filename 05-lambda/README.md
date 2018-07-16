@@ -59,6 +59,14 @@ aws s3 sync content s3://${OSCON_BUCKET}
 
 # Visit the secure area of the site:
 
+### If you have setup Route 53 and SSL
+
 ```
 open "https://2018.oscon.symphonia.io/secure/secret.html"
+```
+
+### If you have not setup Route 53 and SSL
+
+```
+open "http://${OSCON_CLOUDFRONT_DOMAIN}/secure/secret.html"
 ```
